@@ -2,7 +2,7 @@ import React, { ReactElement } from 'react';
 import Cube, {cubeProps, CUBE_SIZE} from './Cube';
 
 interface mapProps {
-  pagePosition: any
+  pagePosition: { x: number; y: number };
 }
 
 const offset = 2*CUBE_SIZE;
@@ -12,19 +12,29 @@ function roundToSize(x: number, cubesize:number) {
 }
 
 function Map({pagePosition}: mapProps) {
-  const [cubeMap,setCubeMap]= React.useState<ReactElement<cubeProps>[]>([]);
+  const [cubeMap, setCubeMap] = React.useState<Record<string, ReactElement>>({});
+
 
   React.useEffect(() => {
-    const items: ReactElement<cubeProps>[] = [];
 
-    for(let j=-offset; j<window.innerWidth+offset; j+=CUBE_SIZE)
-      for(let i=-offset; i<window.innerHeight+offset; i+=CUBE_SIZE)
-        items.push(
-          <Cube x={roundToSize(pagePosition.x, CUBE_SIZE) + j} 
-                y={roundToSize(pagePosition.y, CUBE_SIZE) + i}/>);
+    for(let j=-offset; j<window.innerWidth+offset; j+=CUBE_SIZE) {
+      for(let i=-offset; i<window.innerHeight+offset; i+=CUBE_SIZE) {
+        const 
+          x = roundToSize(pagePosition.x, CUBE_SIZE) + j,
+          y = roundToSize(pagePosition.y, CUBE_SIZE) + i;
+        const key = `${x}_${y}`;
 
-    console.log(pagePosition)
-    setCubeMap(items);
+        // add cube to list if it doesnt exist
+        if(cubeMap[key] === undefined) {
+          const cube = <Cube x={x} y={y}/>;
+          setCubeMap(prevMap => {
+            prevMap[key] = cube;
+            return prevMap;
+          });
+        }
+      }
+    }
+
   }, [pagePosition.x, pagePosition.y]); // add IF RESIZED 
 
 
@@ -42,9 +52,10 @@ function Map({pagePosition}: mapProps) {
     )
   }
   
+  const renderedCubes = Object.values(cubeMap);
   return (
     <div>
-      {cubeMap}
+      {renderedCubes}
     </div>
   )
 }
